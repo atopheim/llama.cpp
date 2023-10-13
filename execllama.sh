@@ -5,8 +5,9 @@ num_tokens=1024
 input_file=""
 prompt=""
 summarize=""
+report_prompt=""
 
-while getopts "n:i:p:s" opt; do
+while getopts "n:i:p:sr" opt; do
   case $opt in
     n)
       num_tokens="$OPTARG"
@@ -19,6 +20,9 @@ while getopts "n:i:p:s" opt; do
       ;;
     s)
       summarize=true
+      ;;
+    r)
+      report_prompt="Create a short and formal report of what this person has done the last weeks based on the person's commit history. No pre-text:"
       ;;
     \?)
       echo "Invalid option: -$OPTARG" >&2
@@ -55,15 +59,20 @@ if [ -n "$input_file" ]; then
     exit 1
   fi
   prompt="$(cat "$input_file")"
-
+  # Check if the report prompt is provided and set the prompt accordingly
+  if [ -n "$report_prompt" ]; then
+    prompt="$report_prompt $prompt"
+  fi
 fi
 
 # Summarize possibility
 if [ "$summarize" == true ]; then
-    prompt="<s>[INST]Summarize and create action points in prioritized order from the following notes: $prompt[/INST]"
-  else
-    prompt="<s>[INST]$prompt[/INST]"
+  prompt="<s>[INST]Summarize and create action points in prioritized order from the following notes: $prompt[/INST]"
+else
+  prompt="<s>[INST]$prompt[/INST]"
 fi
+
+
 
 command="$command -p \"$prompt\""
 
